@@ -1,6 +1,0 @@
-I:\userspace\Git\rimworld\RW-MassAffect\Source\obj\Debug\RW-MassAffect.csproj.AssemblyReference.cache
-I:\userspace\Git\rimworld\RW-MassAffect\Source\obj\Debug\RW-MassAffect.csproj.CoreCompileInputs.cache
-I:\userspace\Git\rimworld\RW-MassAffect\Source\bin\Debug\RW-MassAffect.dll
-I:\userspace\Git\rimworld\RW-MassAffect\Source\bin\Debug\RW-MassAffect.pdb
-I:\userspace\Git\rimworld\RW-MassAffect\Source\obj\Debug\RW-MassAffect.dll
-I:\userspace\Git\rimworld\RW-MassAffect\Source\obj\Debug\RW-MassAffect.pdb
