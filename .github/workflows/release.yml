@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
       
-      -name: Create Release Zip
+      - name: Create Release Zip
         uses: thedoctor0/zip-release@0.7.1
         with:
           type: Zip
