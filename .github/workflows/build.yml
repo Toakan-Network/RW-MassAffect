@@ -1,4 +1,4 @@
-name: release
+name: build
 
 on:
   push:
@@ -11,19 +11,22 @@ jobs:
     permissions:
       contents: read
       steps:
-        - uses: actions/checkout@v2
-
-        - name: Setup MSBuild
-          uses: microsoft/setup-msbuild@v1
-
-        - name: Setup NuGet
-          uses: NuGet/setup-nuget@v1.0.5
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
           
-        - name: setup-msbuild
-          uses: microsoft/setup-msbuild@v1.1
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
 
-        - name: Restore Packages
-          run: nuget restore Source\RW-MassAffect.sln
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.0.5
+        
+      - name: setup-msbuild
+        uses: microsoft/setup-msbuild@v1.1
 
-        - name: Build solution
-          run: msbuild Source\RW-MassAffect.sln -t:rebuild -property:Configuration=Debug
+      - name: Restore Packages
+        run: nuget restore Source\RW-MassAffect.sln
+
+      - name: Build solution
+        run: msbuild Source\RW-MassAffect.sln -t:rebuild -property:Configuration=Debug
