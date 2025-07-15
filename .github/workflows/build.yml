@@ -18,13 +18,7 @@ jobs:
 
       - name: Setup MSBuild Path
         run: |
-          $msbuildPath = "${env:ProgramFiles}\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
-          if (-not (Test-Path $msbuildPath)) {
-            $msbuildPath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
-          }
-          if (-not (Test-Path $msbuildPath)) {
-            $msbuildPath = "${env:ProgramFiles(x86)}\MSBuild\14.0\Bin\MSBuild.exe"
-          }
+          $msbuildPath = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
           echo "MSBUILD_PATH=$msbuildPath" >> $env:GITHUB_ENV
         shell: powershell 
 
