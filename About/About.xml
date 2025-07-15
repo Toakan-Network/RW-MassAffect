@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+	<name>Mass Affect</name>
+	<author>Tad</author>
+    <supportedVersions>
+        <li>1.6</li>
+    </supportedVersions>
+<description xml:whitespace="preserve">
+Ok so hear me out. 
+
+Pawns speed is only currently affected by their clothing modifiers, and the terrain they are on (oh and weather).
+
+What if it was also affected by the mass of the items they are carrying?
+
+This mod does just that. It modifies the movespeed of pawns to consider the mass of items they are carrying, making it more realistic and strategic when it comes to colony management.
+
+**Fair Warning**
+This mod overwrites the Pawn.TicksPerMove method to achieve this, so it may not be compatible with other mods that also modify this method.
+I also have no idea how it works with half the other mods out there, so please let me know if you run into any issues. Not all items in game have mass, so it may not affect all pawns in all situations.
+</description>
+<packageId>MA.Tad.RW.Core</packageId>
+</ModMetaData>

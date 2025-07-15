@@ -20,7 +20,20 @@ namespace RW_MassAffect
         public static Type patchtype = typeof(HarmonyPatches);
         public static string patchname = "RW_MassAffect.HarmonyPatch";
 
-       
+       public static float PawnSpeedModifier { 
+            get {   
+                return 1f; 
+            }
+            set {
+                if (value < 0.01f || value > 10f)
+                {
+                    Log.Warning($"MassAffect :: PawnSpeedModifier set to {value}, which is out of bounds. Clamping to 1f.");
+                    value = 1f;
+                }
+                PawnSpeedModifier = value;
+            }
+        }
+
         static HarmonyPatches()
         {
             // This static constructor is used to ensure that the HarmonyPatch class is loaded
@@ -96,7 +109,10 @@ namespace RW_MassAffect
                     num *= Mathf.Clamp(1f - __instance.carryTracker.CarriedThing.GetStatValue(StatDefOf.Mass) / __instance.GetStatValue(StatDefOf.CarryingCapacity), 0.01f, 1f);
                     //Log.Message($"MassAffect :: {__instance.Name} new move speed after carrying mass adjustment: {num}");
                 }
-                
+
+                // Apply the PawnSpeedModifier if set by another mod.
+                num *= PawnSpeedModifier;
+
                 float num2 = num / 60f;
                 float num3;
                 if (num2 == 0f)
