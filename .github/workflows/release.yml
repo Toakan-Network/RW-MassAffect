@@ -1,13 +1,17 @@
 name: release
 
 on:
-  push:
+  workflow_run:
+    workflows: ["build"]
+    types:
+      - completed
     branches:
       - main
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: write
     steps:
@@ -16,10 +20,15 @@ jobs:
         with:
           fetch-depth: 0
       
+      - name: Prepare Assemblies folder
+        run: |
+          mkdir -p Assemblies
+          cp Source/bin/Debug/RW-MassAffect.dll Assemblies/
+      
       - name: Create Release Zip
         uses: thedoctor0/zip-release@0.7.1
         with:
           type: Zip
           directory: './'
           filename: MassAffect-Release.zip
-          exclusions: '/.git/*, /.gitea/*, /.vscode/*, /.vs/*, /source/*'
+          exclusions: '/.git/*, /.gitea/*, /.github/*, /.gitignore, /.vscode/*, /.vs/*, /source/*'
