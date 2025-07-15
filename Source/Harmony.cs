@@ -1,16 +1,9 @@
 ﻿using HarmonyLib;
 using RimWorld;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Verse;
-using RimWorld.Planet;
 using UnityEngine;
-using Verse.AI;
-using Verse.AI.Group;
-using Verse.Sound;
+using Verse;
 
 namespace RW_MassAffect
 {
@@ -20,11 +13,14 @@ namespace RW_MassAffect
         public static Type patchtype = typeof(HarmonyPatches);
         public static string patchname = "RW_MassAffect.HarmonyPatch";
 
-       public static float PawnSpeedModifier { 
-            get {   
-                return 1f; 
+        public static float PawnSpeedModifier
+        {
+            get
+            {
+                return 1f;
             }
-            set {
+            set
+            {
                 if (value < 0.01f || value > 10f)
                 {
                     Log.Warning($"MassAffect :: PawnSpeedModifier set to {value}, which is out of bounds. Clamping to 1f.");
@@ -45,7 +41,7 @@ namespace RW_MassAffect
 
             try
             {
-                
+
                 harmony.Patch(
                     AccessTools.Method(typeof(Verse.Pawn), "TicksPerMove"),
                     prefix: new HarmonyMethod(typeof(HarmonyPatches.PawnPatch), nameof(PawnPatch.Prefix))
