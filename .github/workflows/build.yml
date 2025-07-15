@@ -16,17 +16,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1
+      - name: Setup MSBuild Path
+        run: |
+          $msbuildPath = "${env:ProgramFiles}\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
+          if (-not (Test-Path $msbuildPath)) {
+            $msbuildPath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
+          }
+          if (-not (Test-Path $msbuildPath)) {
+            $msbuildPath = "${env:ProgramFiles(x86)}\MSBuild\14.0\Bin\MSBuild.exe"
+          }
+          echo "MSBUILD_PATH=$msbuildPath" >> $env:GITHUB_ENV
+        shell: pwsh
 
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v1.0.5
-        
-      - name: setup-msbuild
-        uses: microsoft/setup-msbuild@v1.1
 
       - name: Restore Packages
         run: nuget restore Source\RW-MassAffect.sln
 
       - name: Build solution
-        run: msbuild Source\RW-MassAffect.sln -t:rebuild -property:Configuration=Debug
+        run: |
+          & "$env:MSBUILD_PATH" Source\RW-MassAffect.sln -t:rebuild -property:Configuration=Debug
+        shell: pwsh
