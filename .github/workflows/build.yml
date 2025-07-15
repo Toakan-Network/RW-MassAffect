@@ -10,12 +10,12 @@ jobs:
     runs-on: windows-2019
     permissions:
       contents: read
-      steps:
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
+
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1
 
