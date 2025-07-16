@@ -37,10 +37,15 @@ jobs:
       - name: Create Release Zip
         run: |
           # Create zip excluding unwanted directories and files
-          $excludePatterns = @('*.git*', '.github', '.gitignore', '.vscode', '.vs', 'source', 'Source\bin', 'Source\obj', 'artifacts')
+          $excludePatterns = @('*.git*', '.github', '.gitignore', '.vscode', '.vs', 'Source\bin', 'Source\obj', 'artifacts')
           $allItems = Get-ChildItem -Recurse | Where-Object { 
             $item = $_
             -not ($excludePatterns | Where-Object { $item.FullName -like "*$_*" })
+          } | ForEach-Object { $_.FullName }
+          
+          if ($allItems) {
+            Compress-Archive -Path $allItems -DestinationPath MassAffect-Release.zip -Force
+          } else {
+            Write-Host "No items found to compress"
           }
-          Compress-Archive -Path $allItems -DestinationPath MassAffect-Release.zip -Force
         shell: powershell
