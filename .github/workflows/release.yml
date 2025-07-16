@@ -49,3 +49,74 @@ jobs:
             Write-Host "No items found to compress"
           }
         shell: powershell
+      
+      - name: Get commit messages since last release
+        id: get_commits
+        run: |
+          # Get the latest release tag
+          $latestTag = git describe --tags --abbrev=0 2>$null
+          if ($LASTEXITCODE -ne 0 -or -not $latestTag) {
+            # If no previous release, get all commits
+            $commits = git log --pretty=format:"- %s (%h)" --no-merges
+          } else {
+            # Get commits since the last release
+            $commits = git log "$latestTag..HEAD" --pretty=format:"- %s (%h)" --no-merges
+          }
+          
+          if (-not $commits) {
+            $commits = "- No new commits since last release"
+          }
+          
+          # Escape for GitHub Actions output
+          $commits = $commits -join "`n"
+          echo "COMMIT_MESSAGES<<EOF" >> $env:GITHUB_ENV
+          echo $commits >> $env:GITHUB_ENV
+          echo "EOF" >> $env:GITHUB_ENV
+        shell: powershell
+      
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          body: |
+            Automated release from commit ${{ github.sha }}
+            
+            ## Changes in this release:
+            ${{ env.COMMIT_MESSAGES }}
+            
+            ---
+            Built from latest main branch with compiled RW-MassAffect.dll
+          draft: false
+          prerelease: false
+      
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./MassAffect-Release.zip
+          asset_name: MassAffect-Release.zip
+          asset_content_type: application/zip
+      
+      - name: Cleanup temporary files
+        run: |
+          # Remove temporary directories and files
+          if (Test-Path "artifacts") {
+            Remove-Item -Recurse -Force "artifacts"
+            Write-Host "Removed artifacts directory"
+          }
+          if (Test-Path "Assemblies") {
+            Remove-Item -Recurse -Force "Assemblies"
+            Write-Host "Removed Assemblies directory"
+          }
+          if (Test-Path "MassAffect-Release.zip") {
+            Remove-Item -Force "MassAffect-Release.zip"
+            Write-Host "Removed release zip file"
+          }
+          Write-Host "Cleanup completed"
+        shell: powershell
