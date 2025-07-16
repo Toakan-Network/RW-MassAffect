@@ -27,27 +27,19 @@ jobs:
             $gitVersion = git --version
             Write-Host "Git is already installed: $gitVersion"
           } catch {
-            Write-Host "Git not found. Installing Git..."
+            Write-Host "Git not found. Installing Git using Chocolatey..."
             
-            # Try to install using winget first
+            # Install using Chocolatey
             try {
-              winget install --id Git.Git -e --source winget --silent --accept-package-agreements --accept-source-agreements
-              Write-Host "Git installed successfully using winget"
-            } catch {
-              Write-Host "winget failed, trying Chocolatey..."
+              choco install git -y
+              Write-Host "Git installed successfully using Chocolatey"
               
-              # Try Chocolatey as fallback
-              try {
-                choco install git -y
-                Write-Host "Git installed successfully using Chocolatey"
-              } catch {
-                Write-Host "Both winget and Chocolatey failed. Please install Git manually on the runner."
-                exit 1
-              }
+              # Refresh environment variables
+              $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+            } catch {
+              Write-Host "Chocolatey installation failed. Please install Git manually on the runner."
+              exit 1
             }
-            
-            # Refresh environment variables
-            $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
           }
         shell: powershell
       
