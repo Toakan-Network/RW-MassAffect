@@ -1,3 +1,4 @@
 Source/.vs/*
 Source/obj/*
 Source/bin/*
+/Source/bin/*
