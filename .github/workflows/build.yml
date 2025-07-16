@@ -38,3 +38,37 @@ jobs:
         with:
           name: RW-MassAffect-dll
           path: Source/bin/Debug/RW-MassAffect.dll
+      
+      - name: Cleanup build files
+        run: |
+          # Remove build output directories
+          if (Test-Path "Source\bin") {
+            Remove-Item -Recurse -Force "Source\bin"
+            Write-Host "Removed Source\bin directory"
+          }
+          if (Test-Path "Source\obj") {
+            Remove-Item -Recurse -Force "Source\obj"
+            Write-Host "Removed Source\obj directory"
+          }
+          
+          # Remove any package restore artifacts
+          if (Test-Path "packages") {
+            Remove-Item -Recurse -Force "packages"
+            Write-Host "Removed packages directory"
+          }
+          
+          Write-Host "Build cleanup completed"
+        shell: powershell
+      
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          # Clean up the entire workspace (checkout files)
+          Set-Location ..
+          $workspaceDir = Split-Path -Leaf $env:GITHUB_WORKSPACE
+          if (Test-Path $workspaceDir) {
+            Remove-Item -Recurse -Force $workspaceDir
+            Write-Host "Removed entire workspace: $workspaceDir"
+          }
+          Write-Host "Workspace cleanup completed"
+        shell: powershell

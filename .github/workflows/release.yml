@@ -131,3 +131,16 @@ jobs:
           }
           Write-Host "Cleanup completed"
         shell: powershell
+      
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          # Clean up the entire workspace (checkout files)
+          Set-Location ..
+          $workspaceDir = Split-Path -Leaf $env:GITHUB_WORKSPACE
+          if (Test-Path $workspaceDir) {
+            Remove-Item -Recurse -Force $workspaceDir
+            Write-Host "Removed entire workspace: $workspaceDir"
+          }
+          Write-Host "Workspace cleanup completed"
+        shell: powershell
