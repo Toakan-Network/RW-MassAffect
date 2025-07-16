@@ -19,30 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
-      - name: Install Git
-        run: |
-          # Check if Git is already installed
-          try {
-            $gitVersion = git --version
-            Write-Host "Git is already installed: $gitVersion"
-          } catch {
-            Write-Host "Git not found. Installing Git using Chocolatey..."
-            
-            # Install using Chocolatey
-            try {
-              choco install git -y
-              Write-Host "Git installed successfully using Chocolatey"
-              
-              # Refresh environment variables
-              $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
-            } catch {
-              Write-Host "Chocolatey installation failed. Please install Git manually on the runner."
-              exit 1
-            }
-          }
-        shell: powershell
-      
+        
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
