@@ -32,3 +32,9 @@ jobs:
         run: |
           & "$env:MSBUILD_PATH" Source\RW-MassAffect.sln -t:rebuild -property:Configuration=Debug
         shell: powershell
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: RW-MassAffect-dll
+          path: Source/bin/Debug/RW-MassAffect.dll

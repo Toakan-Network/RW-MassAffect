@@ -20,10 +20,18 @@ jobs:
         with:
           fetch-depth: 0
       
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: RW-MassAffect-dll
+          path: ./artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
       - name: Prepare Assemblies folder
         run: |
           mkdir -p Assemblies
-          cp Source/bin/Debug/RW-MassAffect.dll Assemblies/
+          cp ./artifacts/RW-MassAffect.dll Assemblies/
       
       - name: Create Release Zip
         uses: thedoctor0/zip-release@0.7.1
