@@ -63,12 +63,14 @@ jobs:
       - name: Cleanup workspace
         if: always()
         run: |
-          # Clean up the entire workspace (checkout files)
-          Set-Location ..
-          $workspaceDir = Split-Path -Leaf $env:GITHUB_WORKSPACE
-          if (Test-Path $workspaceDir) {
-            Remove-Item -Recurse -Force $workspaceDir
-            Write-Host "Removed entire workspace: $workspaceDir"
+          # Clean up the workspace contents (but not the workspace directory itself)
+          Get-ChildItem -Force | ForEach-Object {
+            try {
+              Remove-Item -Path $_.FullName -Recurse -Force
+              Write-Host "Removed: $($_.Name)"
+            } catch {
+              Write-Host "Could not remove: $($_.Name) - $($_.Exception.Message)"
+            }
           }
           Write-Host "Workspace cleanup completed"
         shell: powershell
