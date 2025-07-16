@@ -10,7 +10,7 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, windows]
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: write
@@ -30,13 +30,17 @@ jobs:
       
       - name: Prepare Assemblies folder
         run: |
-          mkdir -p Assemblies
-          cp ./artifacts/RW-MassAffect.dll Assemblies/
+          New-Item -ItemType Directory -Force -Path Assemblies
+          Copy-Item ./artifacts/RW-MassAffect.dll Assemblies/
+        shell: powershell
       
       - name: Create Release Zip
-        uses: thedoctor0/zip-release@0.7.1
-        with:
-          type: Zip
-          directory: './'
-          filename: MassAffect-Release.zip
-          exclusions: '/.git/*, /.gitea/*, /.github/*, /.gitignore, /.vscode/*, /.vs/*, /source/*'
+        run: |
+          # Create zip excluding unwanted directories and files
+          $excludePatterns = @('*.git*', '.github', '.gitignore', '.vscode', '.vs', 'source', 'Source\bin', 'Source\obj', 'artifacts')
+          $allItems = Get-ChildItem -Recurse | Where-Object { 
+            $item = $_
+            -not ($excludePatterns | Where-Object { $item.FullName -like "*$_*" })
+          }
+          Compress-Archive -Path $allItems -DestinationPath MassAffect-Release.zip -Force
+        shell: powershell
