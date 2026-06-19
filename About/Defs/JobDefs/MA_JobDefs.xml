@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
+  <ReservationLayerDef>
+    <defName>MA_AssistLayer</defName>
+  </ReservationLayerDef>
+
   <JobDef>
     <defName>MA_CarryAssistance</defName>
     <driverClass>RW_MassAffect.defs.JobDriver_CarryAssistance</driverClass>
-    <reportString>assisting with hauling.</reportString>
-    <casualInterruptible>true</casualInterruptible>
+    <reportString>assisting with carrying.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+    <allowOpportunisticPrefix>false</allowOpportunisticPrefix>
   </JobDef>
 </Defs>

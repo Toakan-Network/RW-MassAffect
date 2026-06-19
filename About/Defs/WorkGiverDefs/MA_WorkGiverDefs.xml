@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
   <WorkGiverDef>
-    <defName>MA_CarryAssistance</defName>
+    <defName>MA_WorkGiver_CarryAssistance</defName>
     <label>assist carrying</label>
+    <verb>assist</verb>
+    <gerund>assisting</gerund>
     <giverClass>RW_MassAffect.defs.WorkGiver_CarryAssistance</giverClass>
     <workType>Hauling</workType>
+    <workTags>ManualDumb</workTags>
     <priorityInType>95</priorityInType>
+    <scanThings>true</scanThings>
   </WorkGiverDef>
 </Defs>

@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+	<ThoughtDef>
+		<defName>MA_AssistedMe</defName>
+		<thoughtClass>Thought_MemorySocial</thoughtClass>
+		<stackLimitForSameOtherPawn>10</stackLimitForSameOtherPawn>
+		<stackedEffectMultiplier>0.9</stackedEffectMultiplier>
+		<durationDays>3</durationDays>
+		<stages>
+			<li>
+				<label>assisted me</label>
+				<description>assisted me</description>
+				<baseOpinionOffset>10</baseOpinionOffset>
+			</li>
+		</stages>
+	</ThoughtDef>
+	
+	<ThoughtDef>
+		<defName>MA_AssistedTogether</defName>
+		<thoughtClass>Thought_MemorySocial</thoughtClass>
+		<stackLimitForSameOtherPawn>10</stackLimitForSameOtherPawn>
+		<stackedEffectMultiplier>0.9</stackedEffectMultiplier>
+		<durationDays>3</durationDays>
+		<stages>
+			<li>
+				<label>Assisted together</label>
+				<description>This person and I worked together as a team to assist someone.</description>
+				<baseOpinionOffset>10</baseOpinionOffset>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+
+
+</Defs>
