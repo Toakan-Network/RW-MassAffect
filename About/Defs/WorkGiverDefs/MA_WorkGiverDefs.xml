@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <WorkGiverDef>
+    <defName>MA_CarryAssistance</defName>
+    <label>assist carrying</label>
+    <giverClass>RW_MassAffect.defs.WorkGiver_CarryAssistance</giverClass>
+    <workType>Hauling</workType>
+    <priorityInType>95</priorityInType>
+  </WorkGiverDef>
+</Defs>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MapComponentDef>
+    <defName>MA_CarryAssistMapComponent</defName>
+    <componentClass>RW_MassAffect.defs.CarryAssistMapComponent</componentClass>
+  </MapComponentDef>
+</Defs>

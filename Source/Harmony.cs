@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using RimWorld;
 using System;
 using System.Linq;
@@ -13,11 +13,17 @@ namespace RW_MassAffect
         public static Type patchtype = typeof(HarmonyPatches);
         public static string patchname = "RW_MassAffect.HarmonyPatch";
 
+        private static float pawnSpeedModifier = 1f;
+        private const float MinMassFactor = 0.10f;
+        private const int MaxAssistHelpers = 2;
+        private const float AssistCapacityBonusPerHelper = 0.25f;
+        private const string AssistJobDefName = "MA_CarryAssistance";
+
         public static float PawnSpeedModifier
         {
             get
             {
-                return 1f;
+                return pawnSpeedModifier;
             }
             set
             {
@@ -26,26 +32,21 @@ namespace RW_MassAffect
                     Log.Warning($"MassAffect :: PawnSpeedModifier set to {value}, which is out of bounds. Clamping to 1f.");
                     value = 1f;
                 }
-                PawnSpeedModifier = value;
+
+                pawnSpeedModifier = value;
             }
         }
 
         static HarmonyPatches()
         {
-            // This static constructor is used to ensure that the HarmonyPatch class is loaded
-            // and the patch is applied when the assembly is loaded.
-
-            // Need to patch the private TicksPerMove in the Pawn class
-            // to allow for faster movement speed.
             var harmony = new HarmonyLib.Harmony(patchname);
 
             try
             {
-
                 harmony.Patch(
-                    AccessTools.Method(typeof(Verse.Pawn), "TicksPerMove"),
-                    prefix: new HarmonyMethod(typeof(HarmonyPatches.PawnPatch), nameof(PawnPatch.Prefix))
-);
+                    AccessTools.Method(typeof(Pawn), "TicksPerMove"),
+                    postfix: new HarmonyMethod(typeof(PawnPatch), nameof(PawnPatch.Postfix))
+                );
                 Log.Message("MassAffect :: Harmony patch for TicksPerMove applied successfully.");
                 harmony.PatchAll();
                 Log.Message("MassAffect :: Harmony patches applied successfully.");
@@ -58,85 +59,63 @@ namespace RW_MassAffect
 
         public static class PawnPatch
         {
-            public static bool Prefix(Pawn __instance, ref float __result, bool diagonal)
+            public static void Postfix(Pawn __instance, ref float __result)
             {
-                float num = __instance.GetStatValue(StatDefOf.MoveSpeed);
-
-                if (__instance.health.Downed && __instance.health.CanCrawl)
+                if (__instance == null || __result <= 0f)
                 {
-                    num = __instance.GetStatValue(StatDefOf.CrawlSpeed);
-                }
-                if (RestraintsUtility.InRestraints(__instance))
-                {
-                    num *= 0.35f;
+                    return;
                 }
 
-                // Check carried pawn mass and adjust speed accordingly
-                if (__instance.carryTracker?.CarriedThing != null && __instance.carryTracker.CarriedThing.def.category == ThingCategory.Pawn)
+                float massFactor = ComputeMassMoveFactor(__instance);
+                if (Mathf.Approximately(massFactor, 1f) && Mathf.Approximately(PawnSpeedModifier, 1f))
                 {
-                    // num *= 0.6f;
-                    Pawn carriedPawn = __instance.carryTracker.CarriedThing as Pawn;
-
-                    float carriedPawnMass = carriedPawn.GetStatValue(StatDefOf.Mass);
-                    float carriedPawnGearMass = carriedPawn.apparel?.WornApparel.Sum(apparel => apparel.GetStatValue(StatDefOf.Mass)) ?? 0f;
-                    float totalPawnMass = Mathf.Clamp(carriedPawnMass + carriedPawnGearMass, 0.01f, 1f);
-
-                    //Log.Message($"MassAffect :: {__instance.Name} is carrying {carriedPawn.Name} with mass {carriedPawnMass}");
-                    num *= Mathf.Clamp(1f - carriedPawnMass / __instance.GetStatValue(StatDefOf.CarryingCapacity), 0.01f, 1f);
-                    //Log.Message($"MassAffect :: {__instance.Name} new move speed after carrying pawn adjustment: {num}");
+                    return;
                 }
 
-                // If Pawn is wearing gear, get mass and adjust speed accordingly
-                if (__instance.apparel != null)
+                float totalFactor = Mathf.Clamp(massFactor * PawnSpeedModifier, MinMassFactor, 10f);
+                if (!Mathf.Approximately(totalFactor, 1f))
                 {
-                    float totalMass = __instance.apparel.WornApparel.Sum(apparel => apparel.GetStatValue(StatDefOf.Mass));
-                    if (totalMass > 0f)
+                    __result = Mathf.Clamp(__result / totalFactor, 1f, 450f);
+                }
+            }
+
+            private static float ComputeMassMoveFactor(Pawn pawn)
+            {
+                float carryingCapacity = Mathf.Max(1f, pawn.GetStatValue(StatDefOf.CarryingCapacity));
+                float carriedMass = 0f;
+
+                Thing burden = pawn.carryTracker?.CarriedThing;
+                if (burden != null && burden != pawn)
+                {
+                    carriedMass += Mathf.Max(0f, burden.GetStatValue(StatDefOf.Mass));
+
+                    if (burden is Pawn carriedPawn && carriedPawn.apparel?.WornApparel != null)
                     {
-                        //Log.Message($"MassAffect :: {__instance.Name} is wearing gear with total mass {totalMass}");
-                        num *= Mathf.Clamp(1f - totalMass / __instance.GetStatValue(StatDefOf.CarryingCapacity), 0.01f, 1f);
-                        //Log.Message($"MassAffect :: {__instance.Name} new move speed after gear mass adjustment: {num}");
+                        carriedMass += carriedPawn.apparel.WornApparel.Sum(apparel => Mathf.Max(0f, apparel.GetStatValue(StatDefOf.Mass)));
                     }
                 }
 
-                // If Pawn is carrying a thing, get its mass and adjust speed accordingly
-                if (__instance.carryTracker?.CarriedThing != null && __instance.carryTracker.CarriedThing.def.BaseMass > 0f)
+                float helperBonusFactor = 1f;
+                if (pawn.CurJobDef == JobDefOf.HaulToCell && burden is Corpse)
                 {
-                    //Log.Message($"MassAffect :: {__instance.Name} is carrying {__instance.carryTracker.CarriedThing.Label} with mass {__instance.carryTracker.CarriedThing.GetStatValue(StatDefOf.Mass)}");
-                    num *= Mathf.Clamp(1f - __instance.carryTracker.CarriedThing.GetStatValue(StatDefOf.Mass) / __instance.GetStatValue(StatDefOf.CarryingCapacity), 0.01f, 1f);
-                    //Log.Message($"MassAffect :: {__instance.Name} new move speed after carrying mass adjustment: {num}");
+                    int helperCount = pawn.Map?.mapPawns?.SpawnedPawnsInFaction(Faction.OfPlayer)
+                        .Count(p => p != pawn
+                            && p.CurJobDef != null
+                            && p.CurJobDef.defName == AssistJobDefName
+                            && p.CurJob?.targetA.Thing == pawn
+                            && p.Position.InHorDistOf(pawn.Position, 2.9f)) ?? 0;
+
+                    helperCount = Mathf.Clamp(helperCount, 0, MaxAssistHelpers);
+                    helperBonusFactor += helperCount * AssistCapacityBonusPerHelper;
                 }
 
-                // Apply the PawnSpeedModifier if set by another mod.
-                num *= PawnSpeedModifier;
+                float effectiveCapacity = carryingCapacity * helperBonusFactor;
+                if (effectiveCapacity <= 0.01f)
+                {
+                    return MinMassFactor;
+                }
 
-                float num2 = num / 60f;
-                float num3;
-                if (num2 == 0f)
-                {
-                    num3 = 450f;
-                }
-                else
-                {
-                    num3 = 1f / num2;
-                    if (__instance.Spawned && !__instance.Map.roofGrid.Roofed(__instance.Position))
-                    {
-                        num3 /= __instance.Map.weatherManager.CurMoveSpeedMultiplier;
-                    }
-                    if (diagonal)
-                    {
-                        num3 *= 1.41421f;
-                    }
-                }
-                num3 = Mathf.Clamp(num3, 1f, 450f);
-                if (__instance.debugMaxMoveSpeed)
-                {
-                    __result = 1f;
-                }
-                else
-                {
-                    __result = num3;
-                }
-                return false; // Skip original method
+                return Mathf.Clamp(1f - (carriedMass / effectiveCapacity), MinMassFactor, 1f);
             }
         }
     }
