@@ -1,5 +1,6 @@
 using RimWorld;
 using System.Collections.Generic;
+using UnityEngine;
 using Verse;
 using Verse.AI;
 
@@ -9,9 +10,61 @@ namespace RW_MassAffect.defs
     {
         private readonly JobChecks jobChecks = new JobChecks();
 
+        private const float OverloadThreshold = 0.75f;
+
         public override ThingRequest PotentialWorkThingRequest => ThingRequest.ForGroup(ThingRequestGroup.Pawn);
 
         public override PathEndMode PathEndMode => PathEndMode.ClosestTouch;
+
+        public override float GetPriority(Pawn pawn, TargetInfo t)
+        {
+            if (t.Thing is not Pawn carrier)
+            {
+                return 0f;
+            }
+
+            if (carrier?.carryTracker?.CarriedThing == null)
+            {
+                return 0f;
+            }
+
+            float capacity = Mathf.Max(1f, carrier.GetStatValue(StatDefOf.CarryingCapacity));
+            float carriedMass = carrier.carryTracker.CarriedThing.GetStatValue(StatDefOf.Mass)
+                * Mathf.Max(1, carrier.carryTracker.CarriedThing.stackCount);
+            
+            float utilizationRatio = Mathf.Clamp01(carriedMass / capacity);
+            float remainingPercent = 1f - utilizationRatio;
+            
+            // Scale priority inversely with remaining capacity: <10% remaining = very high priority
+            if (remainingPercent < 0.1f)
+            {
+                return 50f;
+            }
+            if (remainingPercent < 0.25f)
+            {
+                return 20f;
+            }
+            if (remainingPercent < 0.5f)
+            {
+                return 10f;
+            }
+            
+            return 1f;
+        }
+
+        private static bool IsCarrierOverloaded(Pawn carrier)
+        {
+            if (carrier?.carryTracker?.CarriedThing == null)
+            {
+                return false;
+            }
+
+            float capacity = Mathf.Max(1f, carrier.GetStatValue(StatDefOf.CarryingCapacity));
+            float carriedMass = carrier.carryTracker.CarriedThing.GetStatValue(StatDefOf.Mass)
+                * Mathf.Max(1, carrier.carryTracker.CarriedThing.stackCount);
+
+            return (carriedMass / capacity) >= OverloadThreshold;
+        }
 
         public override Danger MaxPathDanger(Pawn pawn)
         {
@@ -34,6 +87,12 @@ namespace RW_MassAffect.defs
         public override bool ShouldSkip(Pawn pawn, bool forced = false)
         {
             if (pawn?.Map == null)
+            {
+                return true;
+            }
+
+            // Skip if pawn is already assisting someone
+            if (pawn.CurJobDef != null && pawn.CurJobDef.defName == "MA_CarryAssistance")
             {
                 return true;
             }
@@ -68,8 +127,10 @@ namespace RW_MassAffect.defs
                 return false;
             }
 
-            if (!pawn.CanReserve(carrier, 1, -1, null, forced))
+            int currentHelpers = jobChecks.CountHelpers(carrier, pawn.Map);
+            if (currentHelpers >= 3)
             {
+                Log.Message($"[CarryAssist] {pawn.LabelShortCap} BLOCKED: helper cap reached for {carrier.LabelShortCap} ({currentHelpers}/3)");
                 return false;
             }
 

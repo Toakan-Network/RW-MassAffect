@@ -11,15 +11,31 @@ namespace RW_MassAffect.defs
 
         public override bool TryMakePreToilReservations(bool errorOnFailed)
         {
-            return pawn.Reserve(TargetA, job, 1, -1, null, errorOnFailed);
+            Log.Message($"[CarryAssist] {pawn.LabelShortCap} TryMakePreToilReservations for {Carrier?.LabelShortCap ?? "null"} => bypassed");
+            return true;
         }
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
-            this.FailOn(() => Carrier == null || Carrier.CurJobDef != JobDefOf.HaulToCell || Carrier.carryTracker?.CarriedThing is not Corpse);
+            this.FailOn(() =>
+            {
+                if (Carrier == null || Carrier.CurJobDef != JobDefOf.HaulToCell)
+                {
+                    Log.Message($"[CarryAssist] {pawn.LabelShortCap} STOP (FailOn): carrier not hauling");
+                    return true;
+                }
+                return false;
+            });
 
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.ClosestTouch);
+
+            var startToil = new Toil
+            {
+                initAction = () => Log.Message($"[CarryAssist] {pawn.LabelShortCap} START assisting {Carrier?.LabelShortCap ?? "null"}"),
+                defaultCompleteMode = ToilCompleteMode.Instant
+            };
+            yield return startToil;
 
             var assistToil = new Toil
             {
@@ -53,11 +69,13 @@ namespace RW_MassAffect.defs
             {
                 if (Carrier == null || !Carrier.Spawned)
                 {
+                    Log.Message($"[CarryAssist] {pawn.LabelShortCap} STOP assisting: carrier null/despawned");
                     return JobCondition.Succeeded;
                 }
 
                 if (Carrier.CurJobDef != JobDefOf.HaulToCell || Carrier.carryTracker?.CarriedThing is not Corpse)
                 {
+                    Log.Message($"[CarryAssist] {pawn.LabelShortCap} STOP assisting {Carrier.LabelShortCap}: carrier no longer hauling a corpse");
                     return JobCondition.Succeeded;
                 }
 

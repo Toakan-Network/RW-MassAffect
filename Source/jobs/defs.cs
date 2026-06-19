@@ -14,5 +14,6 @@ namespace RW_MassAffect.jobs
         public static JobDef MA_CarryAssistance;
         public static ThoughtDef MA_AssistedMe;
         public static ThoughtDef MA_AssistedTogether;
+        public static ReservationLayerDef MA_AssistLayer;
     }
 }

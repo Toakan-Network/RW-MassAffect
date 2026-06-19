@@ -1,11 +1,14 @@
 using RimWorld;
 using System.Collections.Generic;
+using System.Linq;
 using Verse;
 
 namespace RW_MassAffect
 {
     public class JobChecks
     {
+        private const int MaxAssistHelpers = 3;
+
         public IEnumerable<Pawn> ActiveCarriersNeedingHelp(Map map, Pawn helper)
         {
             if (map == null)
@@ -25,8 +28,28 @@ namespace RW_MassAffect
                     continue;
                 }
 
+                int currentHelpers = CountHelpers(p, map);
+                if (currentHelpers >= MaxAssistHelpers)
+                {
+                    continue;
+                }
+
                 yield return p;
             }
+        }
+
+        public int CountHelpers(Pawn carrier, Map map)
+        {
+            if (carrier == null || map == null)
+            {
+                return 0;
+            }
+
+            return map.mapPawns.SpawnedPawnsInFaction(Faction.OfPlayer)
+                .Count(p => p != carrier
+                    && p.CurJobDef != null
+                    && p.CurJobDef.defName == "MA_CarryAssistance"
+                    && p.CurJob?.targetA.Thing == carrier);
         }
 
         public bool IsValidCarrier(Pawn pawn)
